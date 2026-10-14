@@ -13,7 +13,22 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                echo 'VLE-9 source code checked out from GitHub'
+                checkout scm
+                echo 'VLE-9 source code checked out.'
+            }
+        }
+
+        stage('SonarQube SAST') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'Anvita', variable: 'SONAR_TOKEN')
+                ]) {
+                    sh '''
+                        sonar-scanner \
+                          -Dsonar.host.url=https://sonarcloud.io \
+                          -Dsonar.token="$SONAR_TOKEN"
+                    '''
+                }
             }
         }
 
@@ -50,7 +65,7 @@ pipeline {
             echo 'VLE-9 security pipeline completed successfully.'
         }
         failure {
-            echo 'VLE-9 pipeline failed. Check the stage logs for details.'
+            echo 'VLE-9 pipeline failed. Check the stage logs.'
         }
     }
 }
