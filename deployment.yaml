@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vle9-healthcare
+  labels:
+    app: vle9-healthcare
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vle9-healthcare
+  template:
+    metadata:
+      labels:
+        app: vle9-healthcare
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: healthcare-web
+          image: vle9-healthcare:v1
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
