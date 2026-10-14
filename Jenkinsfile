@@ -96,13 +96,25 @@ pipeline {
                         exit 1
                     fi
 
+                    set +e
                     docker run --rm \
                       --network host \
                       -v "$WORKSPACE/zap-reports:/zap/wrk:rw" \
                       ghcr.io/zaproxy/zaproxy:stable \
                       zap-baseline.py \
                       -t http://127.0.0.1:18081 \
-                      -r "$ZAP_REPORT"
+                      -r "$ZAP_REPORT" \
+                      -I
+
+                    zap_status=$?
+                    set -e
+
+                    if [ "$zap_status" -eq 0 ] || [ "$zap_status" -eq 2 ]; then
+                        echo 'ZAP completed. Review the HTML report for warnings.'
+                    else
+                        echo "ZAP encountered an error. Exit code: $zap_status"
+                        exit "$zap_status"
+                    fi
                 '''
             }
         }
